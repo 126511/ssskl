@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block head_title %}Consumeren kun je leren{% endblock %}
+{% block content %}
+<div class="row" ng-controller="InitialController">
+	{% for badge in user_badges %}
+	<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> 
+		<div class="row">
+			<div class="col-md-3">
+				<img src="{{badge.badge.image.url}}" class="img-responsive">
+			</div>
+			<div class="col-md-9">
+				<strong>{{badge.badge.name}}</strong> {{badge.badge.message}}</div>
+			</div>
+		</div>
+	{% endfor %}
+	<form enctype='multipart/form-data' method="POST" action="/" class="form form-item">
+		{% csrf_token %}
+
+		<div class="col-md-4">
+			<h5>Wat</h5>
+			<div class="products row">
+				{% for product in products %}
+				<div class="col-xs-6">
+					<div class="selectable">
+						<label class="{% if forloop.counter == 1 %}selected{% endif %}">
+							<input type="radio" name="product" value="{{product.id}}" {% if forloop.counter == 1 %}checked="checked"{% endif %}>
+							{{product}} <small>€{{product.price|floatformat:2}}</small>
+						</label>
+					</div>
+				</div>
+				{% endfor %}
+			</div>
+		</div>
+		<div class="col-md-4">
+			<h5>Wie</h5>
+			<div class="users row">
+				{% for buyer in users %}
+				{% if buyer.image %}
+				{% endif %}
+				<div class="col-xs-6">
+					<div class="checkable">
+						<label for="buyer-{{buyer.user.id}}" class=" {% if buyer.user.id == user.id %}selected{% endif %}">
+							<input id="buyer-{{buyer.user.id}}" type="checkbox" name="buyer-{{buyer.user.id}}" value="{{buyer.user.id}}" {% if buyer.user.id == user.id %}checked="checked"{% endif %}>
+							{{buyer}}
+							
+						</label>
+					</div>
+				</div>
+
+				{% endfor %}			
+			</div>
+		</div>
+		<div class="col-md-4">
+			<h5>Betalen</h5>
+			<div class="row">
+				<div class="col-xs-6">
+					<div class="form-group">
+						<div class="input-group">
+							<div class="input-group-addon">aantal</div>
+							<input type="number" class="form-control" name="amount"  value="1"  placeholder="Amount">
+						</div>
+					</div>
+				</div>
+				<div class="col-xs-6">
+					<button type="submit" class="btn btn-info btn-block" name="action"> Afrekenen </button>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}

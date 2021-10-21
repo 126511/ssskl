@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block head_title %}Consumeren kun je leren{% endblock %}
+{% block content %}
+<div class="row" ng-controller="InitialController">
+	<div class="col-md-12">
+		<h3>Je prepaid tegoed</h3>
+		<table class="table table-striped">
+			<tbody>
+				{% for prepaid in prepaids %}
+				<tr>
+					<td>€ {{prepaid.amount|floatformat:2}}</td>
+					<td>{{prepaid.added_at}}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}

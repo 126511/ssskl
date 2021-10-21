@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block head_title %}Consumeren kun je leren{% endblock %}
+{% block content %}
+<div class="row" ng-controller="InitialController">
+	<div class="col-md-12">
+		<h3>Gebruikers</h3>
+		<table class="table table-striped">
+			<tbody>
+				{% for current_user in users %}
+				<tr>
+					<td>{{current_user}}</td>
+					<td>€ {{current_user.balance|floatformat:2}}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
