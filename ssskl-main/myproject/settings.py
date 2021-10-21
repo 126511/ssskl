@@ -11,15 +11,13 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+from pathlib import Path
 # FORCE_SCRIPT_NAME = '/ssskl'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-MEDIA_ROOT = '/home/ricardo/ssskl/media'
-MEDIA_URL = '/media/'
-STATIC_ROOT = '/home/ricardo/ssskl/static'
-STATIC_URL = '/static/'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
@@ -52,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'static'
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -117,6 +116,12 @@ DATABASES = {
     }
 }
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
@@ -152,3 +157,4 @@ USE_TZ = True
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

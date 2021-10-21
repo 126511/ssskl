@@ -24,6 +24,9 @@ from myproject.views import requires_login, requires_profile
 from django.urls import include, path, re_path
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
+from django.conf.urls.static import static
+from django.views.generic.base import RedirectView
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
@@ -38,5 +41,5 @@ urlpatterns = [
     re_path(r'^create/(?P<model>\w+)/', myproject.views.create, name='create'),
     re_path(r'^edit/(?P<model>\w+)/(?P<id>\d+)/', myproject.views.edit, name='edit'),
     re_path(r'^delete/(?P<model>\w+)/(?P<id>\d+)/', myproject.views.delete, name='delete'),
-    re_path(r'^accounts/', include('allauth.urls')),    
-]
+    re_path(r'^accounts/', include('allauth.urls')), 
+] + static(settings.STATIC_URL, document_root="/static/")
