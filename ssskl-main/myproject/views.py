@@ -1,11 +1,10 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import redirect
 from django import forms
 from django.conf import settings
 from django.forms import ModelForm
 from django.db.models import Q
 from django.http import Http404
-from django.shortcuts import render_to_response
 from django.shortcuts import render
 from django.http import HttpResponseRedirect,HttpResponse
 from django.contrib import messages
@@ -19,7 +18,7 @@ from django.utils import timezone
 
 def requires_login(view):
     def new_view(request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return HttpResponseRedirect('/accounts/login/') 
         return view(request, *args, **kwargs)
     return new_view 
@@ -34,7 +33,6 @@ def requires_profile(view):
     return new_view    
 
 from django.middleware.csrf import get_token
-from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
@@ -144,7 +142,8 @@ def start(request):
         sales = 0
         buyers = []
         for buyer in users:
-            if request.POST.has_key('buyer-'+str(buyer.user.id)):
+            #if request.POST.has_key('buyer-'+str(buyer.user.id)):
+            if 'buyer-'+str(buyer.user.id) in request.POST:
                 sales += 1
                 sale = Sale()
                 sale.cashier = request.user
@@ -215,13 +214,15 @@ def users(request):
 def profile(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
 
-    from datetimewidget.widgets import DateWidget
+    #from datetimewidget.widgets import DateWidget
+    from django.contrib.admin.widgets import AdminDateWidget
 
     class ProfileForm(ModelForm):
         class Meta:
             model = Profile
             exclude = ['user','slug','status','completed','organization','intro_completed','group','feedback_user','score','balance','image','birth']
-            widgets = {'birth':DateWidget(usel10n=True, bootstrap_version=3)}  
+            #widgets = {'birth':DateWidget(usel10n=True, bootstrap_version=3)}
+            widgets = {'birth':AdminDateWidget} 
 
     if request.POST:
         form = ProfileForm(request.POST, request.FILES, instance=profile)

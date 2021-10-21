@@ -3,10 +3,7 @@ from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
 #from allauth.account.signals import user_signed_up
 from django.dispatch import receiver
-import sys, traceback
 from django.core.validators import MaxValueValidator, MinValueValidator
-reload(sys)
-sys.setdefaultencoding("utf8")
 from django.db.models import Avg
 from django.core.validators import RegexValidator
 import binascii
@@ -109,7 +106,7 @@ STATUS = (
 from versatileimagefield.fields import VersatileImageField
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, primary_key=True)
+    user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)
     completed = models.BooleanField(default=False)
     status = models.IntegerField(choices=STATUS, default=1) 
     intro_completed = models.BooleanField(default=False)
@@ -126,18 +123,18 @@ class Profile(models.Model):
     def get_absolute_url(self):
         return "/profiel/"+str(self.slug)+"/"
 
-    def __unicode__(self):
+    def __str__(self):
         if self.first_name and self.last_name:
             return self.first_name +' '+ self.last_name[:1]
         elif self.first_name:
             return self.first_name
         else:
-            return str(self.user)
+            return str(self.user)        
 
 
 class Brand(models.Model):
     name = models.CharField(max_length=255)
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class Product(models.Model):
@@ -145,7 +142,7 @@ class Product(models.Model):
     price = models.FloatField(default=.5,verbose_name="Prijs")
     #stock = models.IntegerField(default=0)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
@@ -159,7 +156,7 @@ class Product(models.Model):
 
 
 class Prepaid(models.Model):
-    buyer = models.ForeignKey(User, verbose_name = "Koper")
+    buyer = models.ForeignKey(User, verbose_name = "Koper", on_delete=models.PROTECT)
     amount = models.FloatField(verbose_name = "Aantal euro's")
     added_at = models.DateTimeField(auto_now_add=True)
     processed = models.BooleanField(default=False)
@@ -178,9 +175,9 @@ class Prepaid(models.Model):
         super(Prepaid, self).delete()
 
 class Sale(models.Model):
-    cashier = models.ForeignKey(User,related_name="cashier")
-    buyer = models.ForeignKey(User)
-    product = models.ForeignKey(Product)
+    cashier = models.ForeignKey(User,related_name="cashier", on_delete=models.PROTECT)
+    buyer = models.ForeignKey(User, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
     price = models.FloatField(null=True,blank=True)
     amount = models.FloatField()
     sum = models.FloatField(default=0)
@@ -210,7 +207,7 @@ class Sale(models.Model):
         return Sale.objects.filter(buyer=self.buyer,added_at__lt=self.added_at).aggregate(Sum('amount'))
 
 class Stock(models.Model):
-    product = models.ForeignKey(Product,related_name="product_stock")
+    product = models.ForeignKey(Product,related_name="product_stock", on_delete=models.CASCADE)
     amount = models.FloatField(verbose_name = "Aantal")
     price = models.FloatField(verbose_name = "Inkoopprijs per stuk")
     added_at = models.DateTimeField(auto_now_add=True) 
@@ -219,17 +216,17 @@ class Badge(models.Model):
     name = models.CharField(max_length=200, default='' , verbose_name = "Titel")
     slug = models.CharField(max_length=200, default='' , verbose_name = "slug")
     message = models.TextField()
-    product = models.ForeignKey(Product,verbose_name="Betreffend product")
+    product = models.ForeignKey(Product,verbose_name="Betreffend product", on_delete=models.CASCADE)
     image = models.ImageField(verbose_name="Afbeelding")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 class User_badge(models.Model):
     added_at = models.DateTimeField(auto_now_add=True)
     last_update = models.DateTimeField(auto_now=True)
-    badge = models.ForeignKey(Badge)
-    user = models.ForeignKey(User)
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.badge.name

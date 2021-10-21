@@ -27,7 +27,7 @@ STATIC_URL = '/static/'
 SECRET_KEY = '*6#x44no^20&ufg9&9)4aop#roh1_y8y@b*chrumq=ktm$g*03'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -62,13 +62,24 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-MIDDLEWARE_CLASSES = [
+#MIDDLEWARE_CLASSES = [
+#    'django.middleware.security.SecurityMiddleware',
+#    'django.contrib.sessions.middleware.SessionMiddleware',
+#   'django.middleware.common.CommonMiddleware',
+#    'django.middleware.csrf.CsrfViewMiddleware',
+#    'django.contrib.auth.middleware.AuthenticationMiddleware',
+#    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+#    'django.contrib.messages.middleware.MessageMiddleware',
+#    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+#    'django.contrib.auth.middleware.AuthenticationMiddleware',
+#]
+
+MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -80,7 +91,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap3'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/home/ricardo/ssskl/templates'],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
