@@ -23,6 +23,14 @@ def requires_login(view):
         return view(request, *args, **kwargs)
     return new_view 
 
+def requires_admin(view):
+    def new_view(request, *args, **kwargs): 
+        if not request.user.is_superuser: 
+            messages.add_message(request, messages.INFO, 'Jij bent geen admin en mag deze pagina niet gebruiken!') 
+            return HttpResponseRedirect('/')
+        return view(request, *args, **kwargs)
+    return new_view  
+
 def requires_profile(view):
     def new_view(request, *args, **kwargs): 
         profile = Profile.objects.filter(user=request.user).count()

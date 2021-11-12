@@ -190,6 +190,7 @@ class Sale(models.Model):
         p.save()
         s = Stock.objects.get(product=self.product)
         s.amount = s.amount - self.amount
+        s.save()
 
         return super(Sale, self).save(*args, **kwargs)
 

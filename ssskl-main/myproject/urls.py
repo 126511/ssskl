@@ -20,7 +20,7 @@ from django.contrib import admin
 import myproject.views
 from django.contrib import admin
 from django.conf import settings
-from myproject.views import requires_login, requires_profile
+from myproject.views import requires_login, requires_profile, requires_admin
 from django.urls import include, path, re_path
 from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
@@ -35,11 +35,11 @@ urlpatterns = [
     re_path(r'^history/', requires_login(requires_profile(myproject.views.history)), name='history'),   
     re_path(r'^graph/', requires_login(requires_profile(myproject.views.graph)), name='graph'),   
     re_path(r'^balance/', requires_login(requires_profile(myproject.views.balance)), name='balance'),   
-    re_path(r'^inventory/', requires_login(requires_profile(myproject.views.inventory)), name='inventory'), 
-    re_path(r'^users/', requires_login(requires_profile(myproject.views.users)), name='users'), 
-    re_path(r'^profile/', myproject.views.profile, name='profile'),  
-    re_path(r'^create/(?P<model>\w+)/', myproject.views.create, name='create'),
-    re_path(r'^edit/(?P<model>\w+)/(?P<id>\d+)/', myproject.views.edit, name='edit'),
-    re_path(r'^delete/(?P<model>\w+)/(?P<id>\d+)/', myproject.views.delete, name='delete'),
+    re_path(r'^inventory/', requires_login(requires_profile(requires_admin(myproject.views.inventory))), name='inventory'), 
+    re_path(r'^users/', requires_login(requires_profile(requires_admin(myproject.views.users))), name='users'), 
+    re_path(r'^profile/', requires_login(myproject.views.profile), name='profile'),  
+    re_path(r'^create/(?P<model>\w+)/', requires_login(requires_profile(requires_admin(myproject.views.create))), name='create'),
+    re_path(r'^edit/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_admin(myproject.views.edit))), name='edit'),
+    re_path(r'^delete/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_admin(myproject.views.delete))), name='delete'),
     re_path(r'^accounts/', include('allauth.urls')), 
 ] + static(settings.STATIC_URL, document_root="/static/")
