@@ -3,9 +3,13 @@
 {% block content %}
 <div class="row" ng-controller="InitialController">
 	<div class="col-md-12">
-		<h3>Je prepaid tegoed</h3>
+		<h3>Je prepaid tegoed € {{ profile.balance }}</h3>
 		<table class="table table-striped">
 			<tbody>
+				<tr>
+					<th>Bedrag</th>
+					<th>Wanneer</th>
+				</tr>
 				{% for prepaid in prepaids %}
 				<tr>
 					<td>€ {{prepaid.amount|floatformat:2}}</td>

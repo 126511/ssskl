@@ -140,7 +140,7 @@ class Brand(models.Model):
 class Product(models.Model):
     name = models.CharField(max_length=255,verbose_name="Naam")
     price = models.FloatField(default=.5,verbose_name="Prijs")
-    #stock = models.IntegerField(default=0)
+    stock = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
@@ -160,6 +160,7 @@ class Prepaid(models.Model):
     amount = models.FloatField(verbose_name = "Aantal euro's")
     added_at = models.DateTimeField(auto_now_add=True)
     processed = models.BooleanField(default=False)
+
     def save(self, *args, **kwargs):
         if self.processed == False and self.amount:
             self.processed = True
@@ -188,11 +189,14 @@ class Sale(models.Model):
         p = Profile.objects.get(user=self.buyer)
         p.balance = p.balance - (self.amount * self.price)
         p.save()
-        s = Stock.objects.get(product=self.product)
-        s.amount = s.amount - self.amount
+        s = self.product
+        s.stock = s.stock - self.amount
         s.save()
 
         return super(Sale, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.buyer} bought {str(self.amount)} {self.product} at {self.added_at}"
 
     def delete(self):
         p = Profile.objects.get(user=self.buyer)
@@ -210,8 +214,8 @@ class Sale(models.Model):
 class Stock(models.Model):
     product = models.ForeignKey(Product,related_name="product_stock", on_delete=models.CASCADE)
     amount = models.FloatField(verbose_name = "Aantal")
-    price = models.FloatField(verbose_name = "Inkoopprijs per stuk")
-    added_at = models.DateTimeField(auto_now_add=True) 
+    #price = models.FloatField(verbose_name = "Inkoopprijs per stuk")
+    added_at = models.DateTimeField(auto_now_add=True)
 
 class Badge(models.Model):
     name = models.CharField(max_length=200, default='' , verbose_name = "Titel")

@@ -50,7 +50,7 @@
               {% endif %}
               {% if request.user.is_superuser %}
               <li class="{% if request.path == '/create/Product/' %}active{% endif %}"><a href="/create/Product">Producten</a></li>
-              <li class="{% if request.path == '/create/Stock/' %}active{% endif %}"><a href="/create/Stock">Voorraad</a></li>
+              <li class="{% if request.path == '/inventory/' %}active{% endif %}"><a href="/inventory">Voorraad</a></li>
               <li class="{% if request.path == '/create/Prepaid/' %}active{% endif %}"><a href="/create/Prepaid">Opwaarderen</a></li>
               <li class="{% if request.path == '/users/' %}active{% endif %}"><a href="/users/">Gebruikers</a></li>
               {% endif %}

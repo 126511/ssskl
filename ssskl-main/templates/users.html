@@ -6,10 +6,14 @@
 		<h3>Gebruikers</h3>
 		<table class="table table-striped">
 			<tbody>
-				{% for current_user in users %}
 				<tr>
-					<td>{{current_user}}</td>
-					<td>€ {{current_user.balance|floatformat:2}}</td>
+					<th>Gebruiker</th>
+					<th>Saldo</th>
+				</tr>
+				{% for user in users %}
+				<tr>
+					<td>{{ user }}</td>
+					<td>€ {{ user.balance|floatformat:2 }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>

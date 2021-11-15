@@ -9,6 +9,14 @@
 		{% endif %}
 		<table class="table table-striped">
 			<tbody>
+				<tr>
+					<th>Koper</th>
+					<th>Product</th>
+					<th>Aantal</th>
+					<th>Prijs</th>
+					<th>Wanneer</th>
+					<th>Verwijder aankoop</th>
+				</tr>
 				{% for sale in sales %}
 				<tr>
 					<td>{{sale.buyer}}</td>

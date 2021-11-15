@@ -3,14 +3,17 @@
 {% block content %}
 <div class="row" ng-controller="InitialController">
 	<div class="col-md-12">
-		<h3>Voorraden</h3>
+		<h3>Voorraden (<a href="/create/Stock">voeg voorraad toe</a>)</h3>
 		<table class="table table-striped">
 			<tbody>
-				{% for stock in stocks %}
 				<tr>
-					<td>{{stock.product}}</td>
-					<td>{{stock.amount}}</td>
-					<td>€ {{stock.price|floatformat:2}}</td>
+					<th>Product</th>
+					<th>Voorraad</th>
+				</tr>
+				{% for product in products %}
+				<tr>
+					<td>{{product.name}}</td>
+					<td>{{product.stock}}</td>
 				</tr>
 				{% endfor %}
 			</tbody>

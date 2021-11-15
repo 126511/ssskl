@@ -84,6 +84,11 @@ def create(request,model):
         if form.is_valid():
             obj = form.save()
             obj.save()
+            if model == "Stock":
+                p = Product.objects.get(id=request.POST['product'])
+                p.stock += int(request.POST['amount'])
+                p.save()
+        
             messages.add_message(request, messages.SUCCESS, 'Object succesvol toegevoegd.') 
             form = get_form(local_model,excludes=excludes)(request.POST)
         else:
@@ -108,8 +113,19 @@ def edit(request,model,id):
         form = get_form(local_model,excludes=excludes)
         form = form(request.POST,request.FILES,instance=instance)
         if form.is_valid():
+            if model == "Stock":
+                p = Product.objects.get(id=request.POST['product'])
+                s = Stock.objects.get(id=id)
+                difference = int(request.POST['amount']) - s.amount
+                print(f"{request.POST['amount']} - {s.amount} = {difference}")
+                p.stock += difference
+                p.save()
+            
             obj = form.save()
             obj.save()
+
+
+
             messages.add_message(request, messages.SUCCESS, 'Object successvol upgedate.') 
         else:
             messages.add_message(request, messages.INFO, 'Er is iets fout gegaan.')            
@@ -130,7 +146,14 @@ def delete(request,model,id):
     if model == 'Sale':
         Sale.objects.get(id=id).delete()
         messages.add_message(request, messages.INFO, 'Aankoop ongedaan gemaakt.') 
-        return HttpResponseRedirect('/')         
+        return HttpResponseRedirect('/')
+    if model == 'Stock':
+        s = Stock.objects.get(id=id)
+        p = s.product
+        p.stock -= s.amount
+        p.save()
+        s.delete()
+        return HttpResponseRedirect('/create/Stock')
     else:
         local_model = apps.get_model('myproject', str(model))
         instance = local_model.objects.get(id=id)
@@ -208,11 +231,12 @@ def graph(request):
 
 def balance(request):
     prepaids = Prepaid.objects.filter(buyer=request.user)
-    return render(request, 'balance.html', {'prepaids':prepaids})
+    profile = Profile.objects.get(user=request.user)
+    return render(request, 'balance.html', {'prepaids':prepaids, 'profile':profile})
 
 def inventory(request):
-    stocks = Stock.objects.all()
-    return render(request, 'inventory.html', {'stocks':stocks})
+    products = Product.objects.all()
+    return render(request, 'inventory.html', {'products':products})
 
 def users(request):
     users = Profile.objects.exclude(user__id=1).order_by('balance','-last_update')

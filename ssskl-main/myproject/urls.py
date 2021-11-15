@@ -42,4 +42,4 @@ urlpatterns = [
     re_path(r'^edit/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_admin(myproject.views.edit))), name='edit'),
     re_path(r'^delete/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_admin(myproject.views.delete))), name='delete'),
     re_path(r'^accounts/', include('allauth.urls')), 
-] + static(settings.STATIC_URL, document_root="/static/")
+] + static(settings.STATIC_URL, document_root="/static/") + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
