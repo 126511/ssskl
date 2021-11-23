@@ -103,6 +103,14 @@ STATUS = (
     (2, ("Goedgekeurd")),
     (3, ("Geannuleerd")),  
 )
+
+PERMISSION = (
+    (1, ("Admin")),
+    (2, ("Manager")),
+    (3, ("Gebruiker")),
+    (4, ("Verbannen")),
+)
+
 from versatileimagefield.fields import VersatileImageField
 
 class Profile(models.Model):
@@ -235,3 +243,31 @@ class User_badge(models.Model):
 
     def __str__(self):
         return self.badge.name
+
+class Group(models.Model):
+    name = models.CharField(max_length=128, unique=True, verbose_name="Groepsnaam")
+    members = models.ManyToManyField(User, through='Permission')
+    is_official = models.BooleanField(default=False)
+    description = models.TextField
+    image = VersatileImageField('Afbeelding', upload_to='images/group/',null=True,blank=True)
+    is_open = models.BooleanField(default=False, verbose_name="Ik wil dat iedereen zich bij mijn groep kan aansluiten")
+
+    def __str__(self):
+        return self.name
+    
+
+class Permission(models.Model):
+    permission =  models.IntegerField(choices=PERMISSION, default=3)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user} is {PERMISSION[self.permission - 1][-1]} for {self.group}"
+
+class Invite(models.Model):
+    email = models.EmailField()
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.requested_by} invited {self.email} for {self.group}"

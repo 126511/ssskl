@@ -38,7 +38,18 @@ def requires_profile(view):
             messages.add_message(request, messages.INFO, 'Maak eerst een profiel aan:') 
             return HttpResponseRedirect('/profile/')
         return view(request, *args, **kwargs)
-    return new_view    
+    return new_view
+
+def requires_group(view):
+    def new_view(request, *args, **kwargs):
+        p = Permission.objects.filter(user=request.user)
+        if not p:
+            messages.add_message(request, messages.INFO, 'Je zit nog niet in een groep')
+            return HttpResponseRedirect('/new_group/')
+        get_groups(request)
+        return view(request, *args, **kwargs)
+    return new_view
+            
 
 from django.middleware.csrf import get_token
 from django.template import RequestContext
@@ -276,3 +287,57 @@ def profile(request):
         form = ProfileForm(instance=profile)
 
     return render(request, 'profile.html', {'profile':profile, 'form':form})
+
+def new_group(request):
+    class GroupForm(ModelForm):
+        class Meta:
+            model = Group
+            exclude = ['is_official', 'members']
+
+    if request.method == 'POST':
+        form = GroupForm(request.POST, request.FILES)
+        if form.is_valid():
+            print("saveing form. ..")
+            from django.db import IntegrityError
+            try:
+                obj = form.save()
+            except IntegrityError:
+                messages.add_message(request, messages.INFO, 'Die groep bestaat al')
+
+
+            p = Permission.objects.create(user=request.user, group=obj, permission=2)
+            p.save()
+
+            messages.add_message(request, messages.SUCCESS, 'Je groep is opgeslagen, jij bent Manager van deze groep') 
+            return HttpResponseRedirect("/")
+        else:
+            messages.add_message(request, messages.INFO, 'Er is iets fout gegaan.')     
+    else:
+        form = GroupForm()
+        groups = Group.objects.filter(is_open=True)
+        return render(request, 'new_group.html', {'groups': groups, 'form': form})
+
+def join_group(request, id):
+    g = Group.objects.filter(id=id)
+    if not g:
+        messages.add_message(request, messages.WARNING, "Die groep bestaat niet!")
+        return HttpResponseRedirect("/")
+    g = g[0]
+
+    if not g.is_open:
+        messages.add_message(request, messages.WARNING, "Je mag alleen deelnemen aan deze groep met een uitnodiging!")
+        return HttpResponseRedirect("/")
+    
+    p = Permission(user=request.user, group=g)
+    p.save()
+
+    messages.add_message(request, messages.SUCCESS, f"Je bent toegevoegd aan {g.name}!")
+    return HttpResponseRedirect("/")
+
+def get_groups(request):
+    permissions = Permission.objects.filter(user=request.user)
+    groups = {}
+    for p in permissions:
+        groups[p.group.name] = p.permission
+    
+    request.session['groups'] = groups
