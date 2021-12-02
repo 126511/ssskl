@@ -94,3 +94,17 @@ label.selected{
     vertical-align: top;
     border-top: 1px solid #615353;
 }
+
+.groupmenu {
+    color: #9d9d9d !important;
+    font-size: 16px !important;
+    padding: 0px !important;
+}
+
+.current {
+    font-weight: bold !important;
+}
+
+.current:hover {
+    background-color: transparent !important;
+}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block head_title %}Consumeren kun je leren{% endblock %}
+{% block head_title %}Consumeren kan je leren{% endblock %}
 {% block content %}
 <div class="row" ng-controller="InitialController">
 	{% for badge in user_badges %}
@@ -19,21 +19,26 @@
 		<div class="col-md-4">
 			<h5>Wat</h5>
 			<div class="products row">
+				{% if products %}
 				{% for product in products %}
 				<div class="col-xs-6">
 					<div class="selectable">
 						<label class="{% if forloop.counter == 1 %}selected{% endif %}">
 							<input type="radio" name="product" value="{{product.id}}" {% if forloop.counter == 1 %}checked="checked"{% endif %}>
-							{{product}} <small>€{{product.price|floatformat:2}}</small>
+							{{product.name}} <small>€{{product.price|floatformat:2}}</small>
 						</label>
 					</div>
 				</div>
 				{% endfor %}
+				{% else %}
+				Vraag de manager van je groep om producten toe te voegen!
+				{% endif %}
 			</div>
 		</div>
 		<div class="col-md-4">
 			<h5>Wie</h5>
 			<div class="users row">
+				{% if users %}
 				{% for buyer in users %}
 				{% if buyer.image %}
 				{% endif %}
@@ -47,7 +52,10 @@
 					</div>
 				</div>
 
-				{% endfor %}			
+				{% endfor %}
+				{% else %}
+				Er zijn nog geen gebruikers!
+				{% endif %}		
 			</div>
 		</div>
 		<div class="col-md-4">

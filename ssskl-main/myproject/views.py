@@ -15,6 +15,7 @@ from myproject.models import *
 from django.core import serializers
 import dateutil.parser
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 
 def requires_login(view):
     def new_view(request, *args, **kwargs):
@@ -23,13 +24,13 @@ def requires_login(view):
         return view(request, *args, **kwargs)
     return new_view 
 
-def requires_admin(view):
+def requires_superuser(view):
     def new_view(request, *args, **kwargs): 
         if not request.user.is_superuser: 
             messages.add_message(request, messages.INFO, 'Jij bent geen admin en mag deze pagina niet gebruiken!') 
             return HttpResponseRedirect('/')
         return view(request, *args, **kwargs)
-    return new_view  
+    return new_view
 
 def requires_profile(view):
     def new_view(request, *args, **kwargs): 
@@ -49,8 +50,27 @@ def requires_group(view):
         get_groups(request)
         return view(request, *args, **kwargs)
     return new_view
-            
 
+def requires_manager(view):
+    def new_view(request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        p = Permission.objects.get(user=request.user, group=profile.current_group)
+        if p.permission >= 3:
+            messages.add_message(request, messages.WARNING, 'Jij bent geen manager en mag deze pagina niet gebruiken!')
+            return HttpResponseRedirect("/")
+        return view(request, *args, **kwargs)
+    return new_view
+
+def requires_admin(view):
+    def new_view(request, *args, **kwargs):
+        profile = Profile.objects.get(user=request.user)
+        p = Permission.objects.get(user=request.user, group=profile.current_group)
+        if p.permission >= 2:
+            messages.add_message(request, messages.WARNING, 'Jij bent geen admin en mag deze pagina niet gebruiken!')
+            return HttpResponseRedirect("/")
+        return view(request, *args, **kwargs)
+    return new_view
+            
 from django.middleware.csrf import get_token
 from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
@@ -62,19 +82,19 @@ def get_form(model_class,excludes):
         class Meta:
             model = model_class
             exclude = excludes
-
+   
 
     return DynamoForm
 
 def form_config(model):
     if model == 'Product':
-        excludes = []
+        excludes = ['group']
         title = 'Producten'
     elif model == 'Prepaid':
-        excludes = ['processed']
+        excludes = ['processed', 'group']
         title = 'Opwaarderingen'        
     elif model == 'Stock':
-        excludes = []
+        excludes = ['group']
         title = 'Voorraad'                           
     else:
         excludes = []
@@ -94,6 +114,8 @@ def create(request,model):
         form = get_form(local_model,excludes=excludes)(request.POST,request.FILES)
         if form.is_valid():
             obj = form.save()
+            if model == "Prepaid" or model == "Product":
+                obj.group = request.user.current_group()
             obj.save()
             if model == "Stock":
                 p = Product.objects.get(id=request.POST['product'])
@@ -107,8 +129,9 @@ def create(request,model):
     else:
         form = get_form(local_model,excludes=excludes)
 
-    objects = local_model.objects.all()
-
+    if model == "Product" or model == "Prepaid":
+        objects = local_model.objects.filter(group=request.user.current_group())
+    
     return render(request, 'create_form.html', {'objects':objects, 'form':form, 'title':title, 'model':model})
 
 def edit(request,model,id):
@@ -128,7 +151,6 @@ def edit(request,model,id):
                 p = Product.objects.get(id=request.POST['product'])
                 s = Stock.objects.get(id=id)
                 difference = int(request.POST['amount']) - s.amount
-                print(f"{request.POST['amount']} - {s.amount} = {difference}")
                 p.stock += difference
                 p.save()
             
@@ -175,14 +197,19 @@ def delete(request,model,id):
 
 
 def start(request):
-    products = Product.objects.all()
-    users = Profile.objects.exclude(user__id=1).order_by('-last_update')
+    group = Profile.objects.get(user=request.user).current_group
+    products = Product.objects.filter(group=group)
+    users = Profile.objects.filter(current_group=group).exclude(user__id=1).order_by('-last_update')
     last_sale = None
     user_badges = []
+
+    b, created = Balance.objects.get_or_create(user=request.user, group=group)
+    request.session['balance'] = b.balance
 
     if request.POST:
         sales = 0
         buyers = []
+
         for buyer in users:
             #if request.POST.has_key('buyer-'+str(buyer.user.id)):
             if 'buyer-'+str(buyer.user.id) in request.POST:
@@ -192,6 +219,7 @@ def start(request):
                 sale.buyer = buyer.user
                 sale.product = Product.objects.get(id=int(request.POST['product']))
                 sale.amount = int(request.POST['amount'])
+                sale.group = group
                 sale.save()
                 buyers.append(buyer.user.id)
         if sales == 0:
@@ -221,6 +249,7 @@ def start(request):
                             user_badge.save()
                             user_badges.append(user_badge.id)                            
             user_badges = User_badge.objects.filter(id__in=user_badges)
+        return HttpResponseRedirect("/")
 
     return render(request, 'start.html', {'products':products, 'users':users, 'last_sale':last_sale, 'user_badges':user_badges})
 
@@ -251,6 +280,7 @@ def inventory(request):
 
 def users(request):
     users = Profile.objects.exclude(user__id=1).order_by('balance','-last_update')
+
     return render(request, 'users.html', {'users':users})
 
 
@@ -263,7 +293,7 @@ def profile(request):
     class ProfileForm(ModelForm):
         class Meta:
             model = Profile
-            exclude = ['user','slug','status','completed','organization','intro_completed','group','feedback_user','score','balance','image','birth']
+            exclude = ['user','slug','status','completed','organization','intro_completed','group','feedback_user','score','balance','image','birth','current_group']
             #widgets = {'birth':DateWidget(usel10n=True, bootstrap_version=3)}
             widgets = {'birth':AdminDateWidget} 
 
@@ -297,21 +327,26 @@ def new_group(request):
     if request.method == 'POST':
         form = GroupForm(request.POST, request.FILES)
         if form.is_valid():
-            print("saveing form. ..")
             from django.db import IntegrityError
             try:
                 obj = form.save()
             except IntegrityError:
                 messages.add_message(request, messages.INFO, 'Die groep bestaat al')
+                return HttpResponseRedirect("/")
 
 
             p = Permission.objects.create(user=request.user, group=obj, permission=2)
             p.save()
 
+            profile = Profile(user=request.user)
+            profile.current_group = obj
+            profile.save()
+
             messages.add_message(request, messages.SUCCESS, 'Je groep is opgeslagen, jij bent Manager van deze groep') 
             return HttpResponseRedirect("/")
         else:
-            messages.add_message(request, messages.INFO, 'Er is iets fout gegaan.')     
+            messages.add_message(request, messages.INFO, 'Er is iets fout gegaan.')
+            return HttpResponseRedirect("/")   
     else:
         form = GroupForm()
         groups = Group.objects.filter(is_open=True)
@@ -331,6 +366,10 @@ def join_group(request, id):
     p = Permission(user=request.user, group=g)
     p.save()
 
+    profile = Profile.objects.get(user=request.user)
+    profile.current_group = g
+    profile.save()
+
     messages.add_message(request, messages.SUCCESS, f"Je bent toegevoegd aan {g.name}!")
     return HttpResponseRedirect("/")
 
@@ -338,6 +377,32 @@ def get_groups(request):
     permissions = Permission.objects.filter(user=request.user)
     groups = {}
     for p in permissions:
-        groups[p.group.name] = p.permission
+        groups[p.group.name] = (p.verbose_permission(), p.group.id)
     
+    profile = Profile.objects.get(user=request.user)
+    if profile.current_group:
+        request.session['current_group'] = profile.current_group.name
+
+        
     request.session['groups'] = groups
+
+def switch_group(request, new_group):
+    profile = Profile.objects.get(user=request.user)
+    p = Permission.objects.filter(user=request.user)
+
+    try:
+        g = Group.objects.get(id=new_group)
+    except ObjectDoesNotExist:
+        messages.add_message(request, messages.WARNING, "Die groep bestaat niet!")
+        return HttpResponseRedirect("/")
+
+    for permission in p:
+        if permission.group == g:
+            profile.current_group = g
+            profile.save()
+
+            messages.add_message(request, messages.SUCCESS, 'Je bent van groep gewisseld!')
+            return HttpResponseRedirect("/")
+    
+    messages.add_message(request, messages.ERROR, 'Jij zit niet in die groep!')
+    return HttpResponseRedirect("/")
