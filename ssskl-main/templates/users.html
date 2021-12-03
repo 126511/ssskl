@@ -12,8 +12,8 @@
 				</tr>
 				{% for user in users %}
 				<tr>
-					<td>{{ user }}</td>
-					<td>€ {{ user.balance|floatformat:2 }}</td>
+					<td>{{ user.0 }}</td>
+					<td>€ {{ user.1.balance|floatformat:2 }}</td>
 				</tr>
 				{% endfor %}
 			</tbody>

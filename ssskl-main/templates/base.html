@@ -40,9 +40,8 @@
               <span class="icon-bar"></span>
               <span class="icon-bar"></span>
             </button>
-            {% with  balance=request.session|get_item:"balance" %}
-            <a class="navbar-brand" href="/">SSSKL {% if user.is_authenticated and user.id != 1 %}€ {{ balance|floatformat:2}} {% endif %}</a>
-            {% endwith %}
+
+            <a class="navbar-brand" href="/">SSSKL {% if user.is_authenticated and user.id != 1 %}€ {{ request.user.balance|floatformat:2}} {% endif %}</a>
           </div>
           <div id="navbar" class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
@@ -53,9 +52,9 @@
               
               {% endif %}
               {% if request.user.is_manager %}
-              <li class="{% if request.path == '/create/Product/' %}active{% endif %}"><a href="/create/Product">Producten</a></li>
+              <li class="{% if request.path == '/products/' %}active{% endif %}"><a href="/products">Producten</a></li>
               <li class="{% if request.path == '/inventory/' %}active{% endif %}"><a href="/inventory">Voorraad</a></li>
-              <li class="{% if request.path == '/create/Prepaid/' %}active{% endif %}"><a href="/create/Prepaid">Opwaarderen</a></li>
+              <li class="{% if request.path == '/prepaids/' %}active{% endif %}"><a href="/prepaids">Opwaarderen</a></li>
               <li class="{% if request.path == '/users/' %}active{% endif %}"><a href="/users/">Gebruikers</a></li>
               {% endif %}
             </ul>

@@ -1,20 +1,9 @@
-from django.urls import reverse
-from django.shortcuts import redirect
 from django import forms
-from django.conf import settings
 from django.forms import ModelForm
-from django.db.models import Q
-from django.http import Http404
 from django.shortcuts import render
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
-from django.views.decorators.cache import never_cache
-from datetime import datetime, timedelta
 from myproject.models import *
-from django.core import serializers
-import dateutil.parser
-from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 
 def requires_login(view):
@@ -71,19 +60,12 @@ def requires_admin(view):
         return view(request, *args, **kwargs)
     return new_view
             
-from django.middleware.csrf import get_token
-from django.template import RequestContext
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import TemplateView
-from django.contrib.auth import login
-
 def get_form(model_class,excludes):
     class DynamoForm(forms.ModelForm):
         class Meta:
             model = model_class
             exclude = excludes
    
-
     return DynamoForm
 
 def form_config(model):
@@ -94,7 +76,7 @@ def form_config(model):
         excludes = ['processed', 'group']
         title = 'Opwaarderingen'        
     elif model == 'Stock':
-        excludes = ['group']
+        excludes = ['group', 'product']
         title = 'Voorraad'                           
     else:
         excludes = []
@@ -129,10 +111,121 @@ def create(request,model):
     else:
         form = get_form(local_model,excludes=excludes)
 
+    objects = local_model.objects.all()
+
     if model == "Product" or model == "Prepaid":
         objects = local_model.objects.filter(group=request.user.current_group())
     
     return render(request, 'create_form.html', {'objects':objects, 'form':form, 'title':title, 'model':model})
+
+def products(request):
+
+    def get_form(model_class,excludes):
+        class DynamoForm(forms.ModelForm):
+            class Meta:
+                model = model_class
+                exclude = excludes
+            def __init__(self, *args, **kwargs):
+                super(DynamoForm, self).__init__(*args, **kwargs)
+        return DynamoForm
+    
+    excludes = ['group']
+    title = 'Producten'
+
+    if request.POST:
+        form = get_form(Product,excludes=excludes)(request.POST,request.FILES)
+        if form.is_valid():
+            obj = form.save()
+            obj.group = request.user.current_group()
+            obj.save()
+        
+            messages.add_message(request, messages.SUCCESS, 'Product succesvol toegevoegd.') 
+            form = get_form(Product,excludes=excludes)(request.POST)
+        else:
+            messages.add_message(request, messages.WARNING, 'Er ging iets fout') 
+    else:
+        form = get_form(Product,excludes=excludes)
+
+    objects = Product.objects.filter(group=request.user.current_group())
+
+    return render(request, 'create_form.html', {'objects':objects, 'form':form, 'title':title, 'model':'Product'})
+
+def stocks(request):
+   
+    def get_form(model_class,excludes):
+        class DynamoForm(forms.ModelForm):
+            class Meta:
+                model = model_class
+                exclude = excludes
+            def __init__(self, *args, **kwargs):
+                super(DynamoForm, self).__init__(*args, **kwargs)
+                self.fields['product'].queryset = Product.objects.filter(group=request.user.current_group())
+        return DynamoForm
+    
+    excludes = ['group']
+    title = 'Voorraad'
+
+    if request.POST:
+        form = get_form(Stock,excludes=excludes)(request.POST,request.FILES)
+        if form.is_valid():
+            obj = form.save()
+            obj.group = request.user.current_group()
+            obj.save()
+
+            p = Product.objects.get(id=request.POST['product'])
+            p.stock += int(request.POST['amount'])
+            p.save()
+        
+            messages.add_message(request, messages.SUCCESS, 'Voorraad succesvol toegevoegd.') 
+            form = get_form(Stock,excludes=excludes)(request.POST)
+        else:
+            messages.add_message(request, messages.WARNING, 'Er ging iets fout') 
+    else:
+        form = get_form(Stock,excludes=excludes)
+
+    products = Product.objects.filter(group=request.user.current_group())
+    objects = Stock.objects.filter(product__in=products)
+
+    return render(request, 'create_form.html', {'objects':objects, 'form':form, 'title':title, 'model':'Stock'})
+
+def prepaids(request):
+
+    def get_form(model_class,excludes):
+        class DynamoForm(forms.ModelForm):
+            class Meta:
+                model = model_class
+                exclude = excludes
+            def __init__(self, *args, **kwargs):
+                super(DynamoForm, self).__init__(*args, **kwargs)
+                allowed_buyers = Permission.objects.none()
+                for p in Permission.objects.filter(group=request.user.current_group()):
+                    allowed_buyers |= User.objects.filter(id=p.user.id)
+                self.fields['buyer'].queryset = allowed_buyers
+                self.fields['group'].initial = request.user.current_group()
+                self.fields['group'].widget = forms.HiddenInput()
+            
+        return DynamoForm
+    
+    excludes = ['processed']
+    title = 'Opwaarderingen'
+
+    if request.POST:
+        form = get_form(Prepaid,excludes=excludes)(request.POST,request.FILES)
+        if form.is_valid():
+            obj = form.save()
+            obj.group = request.user.current_group()
+            obj.save()
+      
+            messages.add_message(request, messages.SUCCESS, 'Opwaardering succesvol toegevoegd.') 
+            form = get_form(Prepaid,excludes=excludes)(request.POST)
+        else:
+            messages.add_message(request, messages.WARNING, 'Er ging iets fout') 
+    else:
+        form = get_form(Prepaid,excludes=excludes)
+
+    objects = Prepaid.objects.filter(group=request.user.current_group())
+
+    return render(request, 'create_form.html', {'objects':objects, 'form':form, 'title':title, 'model':'Prepaid'})
 
 def edit(request,model,id):
 
@@ -154,10 +247,15 @@ def edit(request,model,id):
                 p.stock += difference
                 p.save()
             
+            if model == "Prepaid":
+                b = Balance.objects.get(user=request.user, group=request.user.current_group())
+                p = Prepaid.objects.get(id=id)
+                difference = int(request.POST['amount']) - p.amount
+                b.balance += difference
+                b.save()
+            
             obj = form.save()
             obj.save()
-
-
 
             messages.add_message(request, messages.SUCCESS, 'Object successvol upgedate.') 
         else:
@@ -186,15 +284,14 @@ def delete(request,model,id):
         p.stock -= s.amount
         p.save()
         s.delete()
-        return HttpResponseRedirect('/create/Stock')
+        return HttpResponseRedirect('/stocks/')
     else:
         local_model = apps.get_model('myproject', str(model))
         instance = local_model.objects.get(id=id)
         instance.delete()
         messages.add_message(request, messages.INFO, 'Object verwijderd.') 
 
-        return HttpResponseRedirect('/create/'+str(model)+'/') 
-
+        return HttpResponseRedirect('/') 
 
 def start(request):
     group = Profile.objects.get(user=request.user).current_group
@@ -211,7 +308,6 @@ def start(request):
         buyers = []
 
         for buyer in users:
-            #if request.POST.has_key('buyer-'+str(buyer.user.id)):
             if 'buyer-'+str(buyer.user.id) in request.POST:
                 sales += 1
                 sale = Sale()
@@ -257,6 +353,9 @@ def history(request):
     users = Profile.objects.exclude(user__id=1).order_by('-last_update')
     if request.user.id == 1:
         sales = Sale.objects.all().order_by('-added_at')[:100]
+    elif Permission.objects.get(user=request.user, group=request.user.current_group()).permission <= 2:
+        from django.db.models import Q
+        sales = Sale.objects.filter(Q(buyer=request.user) | Q(group=request.user.current_group()))[:100]
     else:
         sales = Sale.objects.filter(buyer=request.user).order_by('-added_at')[:100]
     return render(request, 'history.html', {'sales':sales, 'users':users})
@@ -270,31 +369,31 @@ def graph(request):
     return render(request, 'graph.html', {'sales':sales, 'users':users})
 
 def balance(request):
-    prepaids = Prepaid.objects.filter(buyer=request.user)
-    profile = Profile.objects.get(user=request.user)
+    prepaids = Prepaid.objects.filter(buyer=request.user, group=request.user.current_group())
+    profile = Balance.objects.get(user=request.user, group=request.user.current_group())
     return render(request, 'balance.html', {'prepaids':prepaids, 'profile':profile})
 
 def inventory(request):
-    products = Product.objects.all()
+    products = Product.objects.filter(group=request.user.current_group())
     return render(request, 'inventory.html', {'products':products})
 
 def users(request):
-    users = Profile.objects.exclude(user__id=1).order_by('balance','-last_update')
-
+    users = []
+    for user in Profile.objects.filter(current_group=request.user.current_group()).exclude(user__id=1).order_by('balance','-last_update'):
+        balance = Balance.objects.get(user=user.user, group=request.user.current_group())
+        users.append((user, balance))
+    print(users)
     return render(request, 'users.html', {'users':users})
-
 
 def profile(request):
     profile, created = Profile.objects.get_or_create(user=request.user)
 
-    #from datetimewidget.widgets import DateWidget
     from django.contrib.admin.widgets import AdminDateWidget
 
     class ProfileForm(ModelForm):
         class Meta:
             model = Profile
             exclude = ['user','slug','status','completed','organization','intro_completed','group','feedback_user','score','balance','image','birth','current_group']
-            #widgets = {'birth':DateWidget(usel10n=True, bootstrap_version=3)}
             widgets = {'birth':AdminDateWidget} 
 
     if request.POST:
@@ -334,11 +433,10 @@ def new_group(request):
                 messages.add_message(request, messages.INFO, 'Die groep bestaat al')
                 return HttpResponseRedirect("/")
 
-
             p = Permission.objects.create(user=request.user, group=obj, permission=2)
             p.save()
 
-            profile = Profile(user=request.user)
+            profile, created = Profile.objects.get_or_create(user=request.user)
             profile.current_group = obj
             profile.save()
 
@@ -383,7 +481,6 @@ def get_groups(request):
     if profile.current_group:
         request.session['current_group'] = profile.current_group.name
 
-        
     request.session['groups'] = groups
 
 def switch_group(request, new_group):

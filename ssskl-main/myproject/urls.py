@@ -37,7 +37,10 @@ urlpatterns = [
     
     re_path(r'^inventory/', requires_login(requires_profile(requires_manager(myproject.views.inventory))), name='inventory'), 
     re_path(r'^users/', requires_login(requires_profile(requires_manager(myproject.views.users))), name='users'), 
-    
+    re_path(r'^products/', requires_login(requires_profile(requires_manager(myproject.views.products))), name='products'), 
+    re_path(r'^stocks/', requires_login(requires_profile(requires_manager(myproject.views.stocks))), name='stocks'), 
+    re_path(r'^prepaids/', requires_login(requires_profile(requires_manager(myproject.views.prepaids))), name='prepaids'), 
+
     re_path(r'^profile/', requires_login(myproject.views.profile), name='profile'), 
     
     re_path(r'^new_group/', requires_login(requires_profile(myproject.views.new_group))), 
