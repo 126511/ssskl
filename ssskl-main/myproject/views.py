@@ -37,6 +37,9 @@ def requires_group(view):
             messages.add_message(request, messages.INFO, 'Je zit nog niet in een groep')
             return HttpResponseRedirect('/new_group/')
         get_groups(request)
+        if Permission.objects.get(user=request.user, group=request.user.current_group()).permission == 4:
+            messages.add_message(request, messages.WARNING, 'Je bent uit deze groep verbannen! Wissel van groep of maak een nieuwe aan.')
+            return render(request, 'banned.html')
         return view(request, *args, **kwargs)
     return new_view
 
@@ -285,6 +288,11 @@ def delete(request,model,id):
         p.save()
         s.delete()
         return HttpResponseRedirect('/stocks/')
+    if model == "Invite":
+        i = Invite.objects.get(id=id)
+        i.delete()
+        messages.add_message(request, messages.SUCCESS, 'Uitnodiging verwijderd.')
+        return HttpResponseRedirect('/invite/')
     else:
         local_model = apps.get_model('myproject', str(model))
         instance = local_model.objects.get(id=id)
@@ -378,11 +386,12 @@ def inventory(request):
     return render(request, 'inventory.html', {'products':products})
 
 def users(request):
+    group = request.user.current_group()
     users = []
-    for user in Profile.objects.filter(current_group=request.user.current_group()).exclude(user__id=1).order_by('balance','-last_update'):
-        balance = Balance.objects.get(user=user.user, group=request.user.current_group())
-        users.append((user, balance))
-    print(users)
+    for user in Profile.objects.filter(current_group=group).exclude(user__id=1).order_by('balance','-last_update'):
+        permission = Permission.objects.get(user=user.user, group=group)
+        balance = Balance.objects.get(user=user.user, group=group)
+        users.append((user, balance, permission.verbose_permission()))
     return render(request, 'users.html', {'users':users})
 
 def profile(request):
@@ -503,3 +512,97 @@ def switch_group(request, new_group):
     
     messages.add_message(request, messages.ERROR, 'Jij zit niet in die groep!')
     return HttpResponseRedirect("/")
+
+def ban_user(request, id):
+    banned_user = User.objects.filter(id=id)
+    if not banned_user:
+        messages.add_message(request, messages.ERROR, 'Die gebruiker bestaat niet!')
+        return HttpResponseRedirect('/users')
+    banned_user = banned_user.first()
+
+    group = request.user.current_group()
+
+    p = Permission.objects.filter(user=banned_user, group=group)
+    if not p:
+        messages.add_message(request, messages.WARNING, 'Die gebruiker zit niet in deze groep!')
+        return HttpResponseRedirect('/users')
+    p = p.first()
+
+    print(p.permission)
+
+    if p.permission <= 2 and not request.user.is_superuser:
+        messages.add_message(request, messages.ERROR, 'Alleen superusers mogen managers of admins verbannen!')
+        return HttpResponseRedirect('/users')
+    
+    p.permission = 4
+    p.save()
+
+    messages.add_message(request, messages.SUCCESS, 'Gebruiker verbannen')
+    return HttpResponseRedirect('/users')
+
+def unban_user(request, id):
+    banned_user = User.objects.filter(id=id)
+    if not banned_user:
+        messages.add_message(request, messages.ERROR, 'Die gebruiker bestaat niet!')
+        return HttpResponseRedirect('/users')
+    banned_user = banned_user.first()
+
+    group = request.user.current_group()
+
+    p = Permission.objects.filter(user=banned_user, group=group)
+    if not p:
+        messages.add_message(request, messages.WARNING, 'Die gebruiker zit niet in deze groep!')
+        return HttpResponseRedirect('/users')
+    p = p.first()
+
+    if p.permission != 4:
+        messages.add_message(request, messages.WARNING, 'Die gebruiker is niet verbannen')
+        return HttpResponseRedirect('/users')
+    
+    p.permission = 3
+    p.save()
+
+    messages.add_message(request, messages.SUCCESS, 'Gebruiker is niet meer verbannen')
+    return HttpResponseRedirect('/users')
+
+def invite(request):
+
+
+
+    invites = Invite.objects.filter(group=request.user.current_group())
+
+    return render(request, 'invite.html', {'invites': invites})
+
+
+def new_invite(request):
+    def generate_key():
+        import random, string
+        return "".join(random.choice(string.ascii_letters + string.digits) for x in range(16))
+    
+    i = Invite(key=generate_key(), group=request.user.current_group(), requested_by=request.user)
+    i.save()
+
+    invites = Invite.objects.filter(group=request.user.current_group())
+
+    return render(request, 'invite.html', {'invites': invites, 'new_invite': i})
+
+def use_invite(request, key):
+    try:
+        i = Invite.objects.get(key=key)
+    except ObjectDoesNotExist:
+        messages.add_message(request, messages.ERROR, 'Dat is geen geldige link!')
+        return HttpResponseRedirect('/profile')
+    
+    g = i.group
+    
+    p, created = Permission.objects.get_or_create(user=request.user, group=g)
+    p.save()
+
+    profile = Profile.objects.get(user=request.user)
+    profile.current_group = g
+    profile.save()
+
+    messages.add_message(request, messages.SUCCESS, f"Je bent toegevoegd aan {g.name}!")
+    return HttpResponseRedirect("/")
+
+    

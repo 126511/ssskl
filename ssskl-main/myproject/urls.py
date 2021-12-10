@@ -45,8 +45,14 @@ urlpatterns = [
     
     re_path(r'^new_group/', requires_login(requires_profile(myproject.views.new_group))), 
     re_path(r'^join_group/(?P<id>\d+)/', requires_login(requires_profile(myproject.views.join_group)), name="join_group"),
-    re_path(r'^switch_group/(?P<new_group>\d+)/', requires_login(requires_profile(requires_group(myproject.views.switch_group))), name="switch_group"),
+    re_path(r'^switch_group/(?P<new_group>\d+)/', requires_login(requires_profile(myproject.views.switch_group)), name="switch_group"),
+    re_path(r'^ban_user/(?P<id>\d+)/', requires_login(requires_profile(requires_manager(myproject.views.ban_user))), name="ban_user"),
+    re_path(r'^unban_user/(?P<id>\d+)/', requires_login(requires_profile(requires_manager(myproject.views.unban_user))), name="unban_user"),
     
+    re_path(r'^invite/', requires_login(requires_profile(requires_manager(myproject.views.invite))), name="invite"),
+    re_path(r'^new_invite/', requires_login(requires_profile(requires_manager(myproject.views.new_invite))), name="new_invite"),
+    re_path(r'^use_invite/(?P<key>\w+)/', requires_login(requires_profile(myproject.views.use_invite)), name="use_invite"),
+
     re_path(r'^create/(?P<model>\w+)/', requires_login(requires_profile(requires_manager(myproject.views.create))), name='create'),
     re_path(r'^edit/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_manager(myproject.views.edit))), name='edit'),
     re_path(r'^delete/(?P<model>\w+)/(?P<id>\d+)/', requires_login(requires_profile(requires_manager(myproject.views.delete))), name='delete'),

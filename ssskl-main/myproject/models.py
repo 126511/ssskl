@@ -160,12 +160,13 @@ class Permission(models.Model):
         return f"{self.user} is {PERMISSION[self.permission - 1][-1]} for {self.group}"
 
 class Invite(models.Model):
-    email = models.EmailField()
+    key = models.CharField(max_length=16, default="3nSsi3ncivi3v98b", unique=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     requested_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    datetime = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.requested_by} invited {self.email} for {self.group}"
+        return f"{self.requested_by} invited for {self.group}"
 
 class Profile(models.Model):
     user = models.OneToOneField(User, primary_key=True, on_delete=models.CASCADE)

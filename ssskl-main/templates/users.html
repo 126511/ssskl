@@ -9,15 +9,26 @@
 				<tr>
 					<th>Gebruiker</th>
 					<th>Saldo</th>
+					<th>Status</th>
+					<th></th>
 				</tr>
 				{% for user in users %}
 				<tr>
 					<td>{{ user.0 }}</td>
 					<td>€ {{ user.1.balance|floatformat:2 }}</td>
+					<td>{{ user.2 }}</td>
+					<td>
+						{% if user.2 == "Verbannen" %}
+							<a href="/unban_user/{{ user.0.user.id }}">Gebruiker niet meer verbannen</a>
+						{% else %}
+							<a href="/ban_user/{{ user.0.user.id }}">Gebruiker verbannen</a>
+						{% endif %}	
+					</td>
 				</tr>
 				{% endfor %}
 			</tbody>
 		</table>
+		<a href="/invite/">Maak een uitnodigingslink aan</a>
 	</div>
 </div>
 {% endblock %}
