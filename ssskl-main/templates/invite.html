@@ -4,7 +4,7 @@
 <div class="row" ng-controller="InitialController">
 	<div class="col-md-12">
 		<h3>Uitnodigingen</h3>
-        <table class="table table-striped">
+        <table class="table table-dark table-striped">
 			<tbody>
 				<tr>
 					<th>Aangemaakt door</th>
@@ -13,7 +13,7 @@
 					<th></th>
 				</tr>
 				{% for invite in invites %}
-				<tr class="{% if new_invite == invite %}text-success{% endif %}">
+				<tr class="{% if new_invite == invite %}table-success{% endif %}">
 					<td>{{ invite.requested_by }}</td>
 					<td>{{ invite.datetime }}</td>
 					<td>{{ request.get_host }}/use_invite/{{ invite.key }}</td>
@@ -24,7 +24,7 @@
 				{% endfor %}
 			</tbody>
 		</table>
-        <a href='/new_invite'>Maak een nieuwe uitnodiging aan</a>
+        <a class="btn btn-info" href='/new_invite'>Maak een nieuwe uitnodiging aan</a>
 	</div>
 </div>
 {% endblock %}

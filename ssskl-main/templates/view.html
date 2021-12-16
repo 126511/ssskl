@@ -21,19 +21,19 @@
           <th>Status</th>
           <th>Actor</th>
           <th>Uitvoeren na</th>
-          <th><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></th>  
+          <th><i class="bi bi-trash"></i></th>  
         </tr>
       </thead>
       <tbody>
         {% for activity in instance.activities.all %}
         <tr>
           <td>{{activity.order}}</td>
-          <td><a href="/edit/Activity/{{activity.id}}/" class="btn btn-default"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> {{activity}}</a> </td>
+          <td><a href="/edit/Activity/{{activity.id}}/" class="btn btn-default"><i class="bi bi-wrench"></i> {{activity}}</a> </td>
           <td>{% if activity.execute_at %}{{activity.execute_at}}{% endif %}</td>
           <td>{{activity.get_status_display}}</td>
           <td>{{activity.get_actor_display}}</td>
           <td>{{activity.execute_after}}</td>
-          <td><a href="/delete/Activity/{{Activity.id}}/" onclick="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?')" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a></td>
+          <td><a href="/delete/Activity/{{Activity.id}}/" onclick="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -49,7 +49,7 @@
           <th>Status</th>
           <th>Geopend</th>
           <th>Ontvanger</th>
-          <th><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></th>  
+          <th><i class="bi bi-trash"></i></th>  
         </tr>
       </thead>
       <tbody>
@@ -60,7 +60,7 @@
           <td>{{email.get_status_display}}</td>
           <td>{{email.opened}}</td>
           <td>{% if email.feedback %}{{email.feedback.user}}{% else %}{{email.activity.user}}{% endif %}</td>
-          <td><a href="/delete/Activity/{{Activity.id}}/" onclick="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?')" class="btn btn-danger btn-sm"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a></td>
+          <td><a href="/delete/Activity/{{Activity.id}}/" onclick="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?')" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a></td>
         </tr>
         {% endfor %}
       </tbody>
