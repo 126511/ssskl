@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 def requires_login(view):
     def new_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return HttpResponseRedirect('/accounts/login/') 
+            return HttpResponseRedirect(f'/accounts/login?next={request.path}') 
         return view(request, *args, **kwargs)
     return new_view 
 
