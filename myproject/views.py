@@ -26,7 +26,7 @@ def requires_profile(view):
         profile = Profile.objects.filter(user=request.user).count()
         if profile < 1 or not Profile.objects.get(user=request.user).completed: 
             messages.add_message(request, messages.INFO, 'Maak eerst een profiel aan:') 
-            return HttpResponseRedirect('/profile/')
+            return HttpResponseRedirect(f'/profile?next={request.path}')
         return view(request, *args, **kwargs)
     return new_view
 
@@ -394,7 +394,7 @@ def users(request):
         users.append((user, balance, permission.verbose_permission()))
     return render(request, 'users.html', {'users':users})
 
-def profile(request):
+def profile(request, *args, **kwargs):
     profile, created = Profile.objects.get_or_create(user=request.user)
 
     from django.contrib.admin.widgets import AdminDateWidget
@@ -414,6 +414,8 @@ def profile(request):
                 obj.completed = True
                 messages.add_message(request, messages.SUCCESS, 'Welkom bij SSSKL :)') 
                 obj.save()
+                if kwargs['next']:
+                    return HttpResponseRedirect(f"/{kwargs['next']}")
                 return HttpResponseRedirect('/') 
 
             messages.add_message(request, messages.SUCCESS, 'Profiel instellingen zijn successvol opgeslagen.') 
@@ -573,7 +575,6 @@ def invite(request):
 
     return render(request, 'invite.html', {'invites': invites})
 
-
 def new_invite(request):
     def generate_key():
         import random, string
@@ -586,7 +587,7 @@ def new_invite(request):
 
     return render(request, 'invite.html', {'invites': invites, 'new_invite': i})
 
-def use_invite(request, key):
+def use_invite(request, key, *args, **kwargs):
     try:
         i = Invite.objects.get(key=key)
     except ObjectDoesNotExist:
