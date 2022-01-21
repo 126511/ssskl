@@ -47,7 +47,7 @@
             <ul class="navbar-nav">
               {% if user.is_authenticated %}
               <li class="nav-item {% if request.path == '/profile/' %}active{% endif %}" ><a class="nav-link" href="/profile/">Profiel</a></li>
-              <li class="nav-item {% if request.path == '/history/' %}active{% endif %}"><a class="nav-link" href="/history">Historie</a></li>
+              <li class="nav-item {% if request.path == '/history/' %}active{% endif %}"><a class="nav-link" href="/history">Geschiedenis</a></li>
               <li class="nav-item {% if request.path == '/balance/' %}active{% endif %}"><a class="nav-link" href="/balance">Saldo</a></li>
               
               {% endif %}
