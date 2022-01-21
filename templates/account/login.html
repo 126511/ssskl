@@ -9,9 +9,12 @@
 
 <h1>{% trans "Sign In" %}</h1>
 
+Welkom op foerageren.nl! Dé website om de consumptie van jouw scoutinggroep bij te houden. Het werkt als volgt, jouw scoutinggroep benoemt iemand tot Manager, deze schiet de inkopen voor. Vervolgens kunnen alle leden via hun persoonlijke account op de website aanvinken dat ze iets gepakt hebben uit de bar of de kast. De leden hebben een prepaid saldo, dat ze betalen via een Tikkie aan de Manager.<br>
+Groepsleden uitnodigen is super makkelijk: met 1 druk op de knop maak je een link aan die je met de groepsleden kan delen. 
+
 {% get_providers as socialaccount_providers %}
 
-<form class="login" method="POST" action="{% url 'account_login' %}?next=/">
+<form class="login mt-3" method="POST" action="{% url 'account_login' %}?next=/">
   {% csrf_token %}
   {{ form|crispy }}
   {% if redirect_field_value %}

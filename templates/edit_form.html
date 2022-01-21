@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load crispy_forms_tags %}
-{% block head_title %}Profiel{% endblock %}
+{% block head_title %}Bewerken{% endblock %}
 {% block css %}
 
 {% endblock %}
@@ -14,7 +14,7 @@
     <form enctype='multipart/form-data' method="POST" action="." class="form form-item">
      {% csrf_token %}
      {{ form|crispy }}
-     <button type="submit" class="btn pull-right btn-success" name="action"><i class="bi bi-check"></i> Opslaan </button>
+     <button type="submit" class="btn pull-right btn-success mt-1" name="action"><i class="bi bi-check"></i> Opslaan </button>
    </form>
  </div>
 </div>

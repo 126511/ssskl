@@ -9,9 +9,9 @@
 		<form enctype='multipart/form-data' method="POST" action="." class="form form-item">
 			{% csrf_token %}
 			{{ form|crispy }}
-			<button type="submit" class="btn float-end btn-success" name="action"><i class="bi bi-check"></i> Opslaan </button>
+			<button type="submit" class="btn float-end btn-success mt-2" name="action"><i class="bi bi-check"></i> Opslaan </button>
 		</form>
-		<a class="btn btn-primary" href="/accounts/password/change/">Change password</a>
+		<a class="btn btn-primary mt-2" href="/accounts/password/change/">Change password</a>
 	</div>
 </div>
 {% endblock %}
