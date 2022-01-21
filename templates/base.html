@@ -58,7 +58,7 @@
               <li class="nav-item {% if request.path == '/users/' %}active{% endif %}"><a class="nav-link" href="/users/">Gebruikers</a></li>
               {% endif %}
               {% if request.user.is_superuser %}
-              <li><a class="nav-link" href="/admin/">Django-beheer</a></li>
+              <li><a class="nav-link" target="_blank" href="/admin/">Django-beheer</a></li>
               {% endif %}
             </ul>
             {% if user.is_authenticated %}
