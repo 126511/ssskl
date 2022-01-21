@@ -34,8 +34,8 @@
 
       <nav class="navbar navbar-light fixed-top navbar-expand-lg" style="background-color: #e0e0e0">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-              <img src="/static/favicon.png" style="height: 1.5em;" href="#">
+            <a class="navbar-brand" href="/">
+              <img src="/static/favicon.png" style="height: 1.5em;" href="/">
               Foerageren {% if user.is_authenticated and user.id != 1 %}€ {{ request.user.balance|floatformat:2}} {% endif %}
             </a>
 
