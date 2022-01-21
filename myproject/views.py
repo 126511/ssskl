@@ -303,7 +303,7 @@ def delete(request,model,id):
 
 def start(request):
     group = Profile.objects.get(user=request.user).current_group
-    products = Product.objects.filter(group=group)
+    products = Product.objects.filter(group=group).order_by('name')
     users = Profile.objects.filter(current_group=group).exclude(user__id=1).order_by('-last_update')
     last_sale = None
     user_badges = []
